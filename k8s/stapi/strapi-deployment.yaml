@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: strapi-deployment
+spec: 
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: strapi
+  template: 
+    metadata: 
+      labels: 
+        app: strapi
+    spec: 
+      containers: 
+        - name: strapi
+          image: strapi/strapi:latest
+          ports: 
+            - containerPort: 1337
+          env: 
+            - name: DATABASE_CLIENT
+              value: postgres
+            - name: DATABASE_HOST
+              value: postgres-service
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              valueFrom: 
+                configMapKeyRef:
+                  name: postgres-config
+                  key: POSTGRES_DB
+            - name: DATABASE_USERNAME
+              valueFrom: 
+                configMapKeyRef:
+                  name: postgres-config
+                  key: POSTGRES_USER
+            - name: DATABASE_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: strapi-data
+              mountPath: /srv/app
+      volumes:
+        - name: strapi-data
+          emptyDir: {}
